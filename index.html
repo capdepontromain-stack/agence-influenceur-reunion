@@ -428,5 +428,69 @@ document.querySelectorAll('.ytf').forEach(function(f){
 {"@type":"ListItem","position":3,"item":{"@type":"VideoObject","name":"Aftermovie et campagne de diffusion 974","description":"Aftermovie d'événement diffusé en campagne locale.","thumbnailUrl":"https://i.ytimg.com/vi/KlUwgP8ZzxA/hqdefault.jpg","uploadDate":"2026-07-15","embedUrl":"https://www.youtube-nocookie.com/embed/KlUwgP8ZzxA"}},
 {"@type":"ListItem","position":4,"item":{"@type":"VideoObject","name":"Production vidéo Pull Up Événements La Réunion","description":"Exemple de production vidéo réalisée à La Réunion.","thumbnailUrl":"https://i.ytimg.com/vi/zk6OUqFxThQ/hqdefault.jpg","uploadDate":"2026-07-15","embedUrl":"https://www.youtube-nocookie.com/embed/zk6OUqFxThQ"}}]}
 </script>
+<style id="21st-css">
+/* ===== INSPIRATION 21ST.DEV ===== */
+/* titre : révélation mot à mot */
+.mot{display:inline-block;animation:lever .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(.15s + var(--i)*.045s)}
+@keyframes lever{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.mot{animation:none}}
+/* fin 21st */
+</style>
+<script id="21st-js">
+(function(){
+  var calme = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Titre : mots découpés pour la révélation */
+  var h1 = document.querySelector('.hero h1');
+  if (h1 && !calme){
+    h1.setAttribute('aria-label', (h1.innerText || h1.textContent).replace(/\s+/g, ' ').trim());
+    var i = 0, dernier = null;
+    function decoupe(noeud){
+      Array.prototype.slice.call(noeud.childNodes).forEach(function(n){
+        if (n.nodeType === 3){
+          var frag = document.createDocumentFragment();
+          n.textContent.split(/(\s+)/).forEach(function(part){
+            if (!part) return;
+            if (/^\s+$/.test(part)){ frag.appendChild(document.createTextNode(part)); return; }
+            /* Ponctuation seule : on la recolle au mot précédent pour éviter
+               qu'elle parte toute seule à la ligne. */
+            if (/^[.,;:!?…»)\]]+$/.test(part) && dernier){ dernier.appendChild(document.createTextNode(part)); return; }
+            var sp = document.createElement('span');
+            sp.className = 'mot'; sp.textContent = part;
+            sp.setAttribute('aria-hidden', 'true');
+            sp.style.setProperty('--i', i++);
+            frag.appendChild(sp); dernier = sp;
+          });
+          noeud.replaceChild(frag, n);
+        } else if (n.nodeType === 1 && n.tagName !== 'BR'){
+          /* Texte en dégradé (background-clip:text) : on anime le bloc entier. */
+          var fill = getComputedStyle(n).webkitTextFillColor;
+          if (fill === 'rgba(0, 0, 0, 0)' || fill === 'transparent'){
+            n.classList.add('mot');
+            n.setAttribute('aria-hidden', 'true');
+            n.style.setProperty('--i', i++); dernier = n;
+          } else {
+            decoupe(n);
+          }
+        }
+      });
+    }
+    decoupe(h1);
+  }
+
+  /* Boutons aimantés */
+  if (!calme && matchMedia('(pointer:fine)').matches){
+    document.querySelectorAll('a.btn').forEach(function(b){
+      b.addEventListener('mousemove', function(e){
+        var r = b.getBoundingClientRect();
+        var dx = ((e.clientX - r.left)/r.width - .5) * 10;
+        var dy = ((e.clientY - r.top)/r.height - .5) * 8;
+        b.style.transform = 'translate(' + dx + 'px,' + (dy - 2) + 'px)';
+      });
+      b.addEventListener('mouseleave', function(){ b.style.transform = ''; });
+    });
+  }
+})();
+</script>
 </body>
 </html>
